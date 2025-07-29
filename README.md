@@ -97,16 +97,6 @@ It uses `.env.prod` for each service and enforces internal access.
 
 ---
 
-## 📁 Folder Structure (Services)
-
-Each service folder contains:
-
-- `public_api.py` – the main Tornado app entry point
-- `python-libs.txt` – dependency list
-- `.env.dev` and `.env.prod` – environment config
-
----
-
 ## 🔄 Switching Environments
 
 - `.env.dev`: used by manual run and Docker Dev
