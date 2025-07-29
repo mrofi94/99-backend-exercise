@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  listing:
+    build:
+      context: .
+      args:
+        APP: listing_service.py
+    expose:
+      - "8000"
+    volumes:
+      - ./listings.db:/app/listings.db
+    env_file: .env.prod
+
+  user:
+    build:
+      context: .
+      args:
+        APP: user_service.py
+    expose:
+      - "8000"
+    volumes:
+      - ./listings.db:/app/listings.db
+    env_file: .env.prod
+
+  public:
+    build:
+      context: .
+      args:
+        APP: public_api.py
+    ports:
+      - "8000:8000"
+    depends_on:
+      - listing
+      - user
+    env_file: .env.prod

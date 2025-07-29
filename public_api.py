@@ -5,6 +5,19 @@ import tornado.gen
 import logging
 import json
 
+import os
+from dotenv import load_dotenv
+
+# Detect ENV manually or default to 'dev'
+env = os.environ.get("ENV", "dev").lower()
+env_file = ".env.dev" if env == "dev" else ".env.prod"
+load_dotenv(dotenv_path=env_file)
+
+# Now access service URLs from the env file
+LISTING_SERVICE_URL = os.getenv("LISTING_SERVICE_URL")
+USER_SERVICE_URL = os.getenv("USER_SERVICE_URL")
+
+
 class BaseHandler(tornado.web.RequestHandler):
     def write_json(self, obj, status_code=200):
         self.set_header("Content-Type", "application/json")
@@ -19,20 +32,21 @@ class PingHandler(BaseHandler):
 
 # /public-api/users
 class PublicUsersHandler(BaseHandler):
-    @tornado.gen.coroutine
-    def get(self):
-        http_client = tornado.httpclient.AsyncHTTPClient()
-        url = "http://localhost:7000/users"
-        params = self.request.query
-        if params:
-            url += "?" + params
+    # commented because this should be hidden
+    # @tornado.gen.coroutine
+    # def get(self):
+    #     http_client = tornado.httpclient.AsyncHTTPClient()
+    #     url = "http://localhost:7000/users"
+    #     params = self.request.query
+    #     if params:
+    #         url += "?" + params
 
-        try:
-            response = yield http_client.fetch(url)
-            self.write_json(json.loads(response.body.decode()))
-        except Exception as e:
-            logging.exception("Failed to fetch users")
-            self.write_json({"result": False, "errors": ["Internal error fetching users"]}, status_code=500)
+    #     try:
+    #         response = yield http_client.fetch(url)
+    #         self.write_json(json.loads(response.body.decode()))
+    #     except Exception as e:
+    #         logging.exception("Failed to fetch users")
+    #         self.write_json({"result": False, "errors": ["Internal error fetching users"]}, status_code=500)
 
     @tornado.gen.coroutine
     def post(self):
@@ -46,7 +60,7 @@ class PublicUsersHandler(BaseHandler):
         http_client = tornado.httpclient.AsyncHTTPClient()
         try:
             response = yield http_client.fetch(
-                "http://localhost:7000/users",
+                USER_SERVICE_URL+"/users",
                 method="POST",
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
                 body=f"name={name}"
@@ -61,8 +75,8 @@ class PublicListingsHandler(BaseHandler):
     @tornado.gen.coroutine
     def get(self):
         http_client = tornado.httpclient.AsyncHTTPClient()
-        listings_url = "http://localhost:6000/listings"
-        users_url = "http://localhost:7000/users"
+        listings_url = LISTING_SERVICE_URL+"/listings"
+        users_url = USER_SERVICE_URL +"/users"
 
         # Forward query string to listings
         listings_url += "?" + self.request.query if self.request.query else ""
@@ -104,7 +118,7 @@ class PublicListingsHandler(BaseHandler):
             # Forward to listing service
             http_client = tornado.httpclient.AsyncHTTPClient()
             response = yield http_client.fetch(
-                "http://localhost:6000/listings",
+                LISTING_SERVICE_URL+"/listings",
                 method="POST",
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
                 body=f"user_id={user_id}&listing_type={listing_type}&price={price}"
