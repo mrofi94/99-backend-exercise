@@ -1,303 +1,116 @@
-# Backend Tech Challenge
-An exercise to assess your skills with backend development and microservices architecture.
+# 🛍️ 99 Backend Exercise – Setup & Usage Guide
 
-You are required to use either Java (Spring Boot), Go, or Python (Tornado framework). A great submission would demonstrate a grasp of the principles of microservice architecture.
+This project consists of 3 microservices:
 
-## Introduction
-We're building a system that stores information about users and properties that are available to rent or buy. The system is designed as a set of small web applications that each perform a specific task (otherwise known as "microservices").
+- `listing_service` – Handles listing data
+- `user_service` – Handles user data
+- `public_api` – Gateway service that exposes public API
 
-Please read [the Wikipedia article about microservices](https://en.wikipedia.org/wiki/Microservices) if you are not familar with the architecture before.
+---
 
-Some parts of the system have been built already. We need your help to complete the rest!
+## 📦 Requirements
 
-### Architecture
-This system comprises of 3 independent web applications:
+- Python 3.8+
+- Docker & Docker Compose
+- `pip`, `virtualenv` (for manual run)
 
-- **Listing service:** Stores all the information about properties that are available to rent and buy
-- **User service:** Stores information about all the users in the system
-- **Public API layer:** Set of APIs that are exposed to the web/public
+---
 
-The listing service and user service are backed by relevant databases to persist data. The services are essentially a wrapper around their respective databases to manipulate the data stored in them. For this reason, the services are not intended to be directly accessible by any external client/application.
+## 🌐 API Collection
 
-Services are free to store the data in any format they wish (in a SQL table, or as a document in a NoSQL db, etc.). The only requirement is for them to expose a set of REST APIs that return data in a standardised JSON format. Services are the guardians/gatekeepers for their respective databases. **Any other application/service that wishes to access the data must go solely through the REST APIs exposed by the service. It cannot access the data directly from the database at any cost.**
+Postman Collection (organized by service):
 
-How does the mobile app or user-facing website access the data in the system? This is where the public API layer comes in. The public API layer is a web application that contains APIs that can be called by external clients/applications. This web application is responsible for interacting with the listing/user service through its APIs to pull out the relevant data and return it to the external caller in the appropriate format.
+👉 [Open Postman Collection](https://mrofiarofah.postman.co/workspace/New-Team-Workspace~b91e1aa3-b051-4d97-af31-7a00055c99e0/collection/403743-51d7f063-f257-43ac-813b-6322fd86b7a2?action=share\&creator=403743)
 
-### 1) Listing Service
-The listing service stores information about properties that are available to rent or buy. These are the fields available in a listing object:
+depending on how we run the project, postman collection below may not be accessible
+1. listings
+2. users
 
-- `id (int)`: Listing ID _(auto-generated)_
-- `user_id (int)`: ID of the user who created the listing _(required)_
-- `price (int)`: Price of the listing. Should be above zero _(required)_
-- `listing_type (str)`: Type of the listing. `rent` or `sale` _(required)_
-- `created_at (int)`: Created at timestamp. In microseconds _(auto-generated)_
-- `updated_at (int)`: Updated at timestamp. In microseconds _(auto-generated)_
+please check the "Environment Access" table below for different methods on running the project and how it would affect accessibility
 
-#### APIs
-##### Get all listings
-Returns all the listings available in the db (sorted in descending order of creation date). Callers can use `page_num` and `page_size` to paginate through all the listings available. Optionally, you can specify a `user_id` to only retrieve listings created by that user.
+---
 
-```
-URL: GET /listings
+## 🧲 Environment Access
 
-Parameters:
-page_num = int # Default = 1
-page_size = int # Default = 10
-user_id = str # Optional. Will only return listings by this user if specified
-```
-```json
-Response:
-{
-    "result": true,
-    "listings": [
-        {
-            "id": 1,
-            "user_id": 1,
-            "listing_type": "rent",
-            "price": 6000,
-            "created_at": 1475820997000000,
-            "updated_at": 1475820997000000,
-        }
-    ]
-}
-```
+| Service           | Manual Run | Docker Dev | Docker Prod |
+| ----------------- | ---------- | ---------- | ----------- |
+| `listing_service` | ✅ Yes      | ✅ Yes      | ❌ Hidden    |
+| `user_service`    | ✅ Yes      | ✅ Yes      | ❌ Hidden    |
+| `public_api`      | ✅ Yes      | ✅ Yes      | ✅ Yes       |
 
-##### Create listing
-```
-URL: POST /listings
-Content-Type: application/x-www-form-urlencoded
+---
 
-Parameters: (All parameters are required)
-user_id = int
-listing_type = str
-price = int
-```
-```json
-Response:
-{
-    "result": true,
-    "listing": {
-        "id": 1,
-        "user_id": 1,
-        "listing_type": "rent",
-        "price": 6000,
-        "created_at": 1475820997000000,
-        "updated_at": 1475820997000000,
-    }
-}
-```
+## ⚙️ 1. Manual Run (Dev Mode)
 
-### 2) User Service
-The user service stores information about all the users on the system. Fields available in the user object:
-
-- `id (int)`: User ID _(auto-generated)_
-- `name (str)`: Full name of the user _(required)_
-- `created_at (int)`: Created at timestamp. In microseconds _(auto-generated)_
-- `updated_at (int)`: Updated at timestamp. In microseconds _(auto-generated)_
-
-#### APIs
-##### Get all users
-Returns all the users available in the db (sorted in descending order of creation date).
-
-```
-URL: GET /users
-
-Parameters:
-page_num = int # Default = 1
-page_size = int # Default = 10
-```
-```json
-Response:
-{
-    "result": true,
-    "users": [
-        {
-            "id": 1,
-            "name": "Suresh Subramaniam",
-            "created_at": 1475820997000000,
-            "updated_at": 1475820997000000,
-        }
-    ]
-}
-```
-
-##### Get specific user
-Retrieve a user by ID
-```
-URL: GET /users/{id}
-```
-```json
-Response:
-{
-    "result": true,
-    "user": {
-        "id": 1,
-        "name": "Suresh Subramaniam",
-        "created_at": 1475820997000000,
-        "updated_at": 1475820997000000,
-    }
-}
-```
-
-##### Create user
-```
-URL: POST /users
-Content-Type: application/x-www-form-urlencoded
-
-Parameters: (All parameters are required)
-name = str
-```
-```json
-Response:
-{
-    "result": true,
-    "user": {
-        "id": 1,
-        "name": "Suresh Subramaniam",
-        "created_at": 1475820997000000,
-        "updated_at": 1475820997000000,
-    }
-}
-```
-
-### 3) Public APIs
-These are the public facing APIs that can be called by external clients such as mobile applications or the user facing website.
-
-##### Get listings
-Get all the listings available in the system (sorted in descending order of creation date). Callers can use `page_num` and `page_size` to paginate through all the listings available. Optionally, you can specify a `user_id` to only retrieve listings created by that user.
-
-```
-URL: GET /public-api/listings
-
-Parameters:
-page_num = int # Default = 1
-page_size = int # Default = 10
-user_id = str # Optional
-```
-```json
-{
-    "result": true,
-    "listings": [
-        {
-            "id": 1,
-            "listing_type": "rent",
-            "price": 6000,
-            "created_at": 1475820997000000,
-            "updated_at": 1475820997000000,
-            "user": {
-                "id": 1,
-                "name": "Suresh Subramaniam",
-                "created_at": 1475820997000000,
-                "updated_at": 1475820997000000,
-            },
-        }
-    ]
-}
-
-```
-
-##### Create user
-```
-URL: POST /public-api/users
-Content-Type: application/json
-```
-```json
-Request body: (JSON body)
-{
-    "name": "Lorel Ipsum"
-}
-```
-```json
-Response:
-{
-    "user": {
-        "id": 1,
-        "name": "Lorel Ipsum",
-        "created_at": 1475820997000000,
-        "updated_at": 1475820997000000,
-    }
-}
-```
-
-##### Create listing
-```
-URL: POST /public-api/listings
-Content-Type: application/json
-```
-```json
-Request body: (JSON body)
-{
-    "user_id": 1,
-    "listing_type": "rent",
-    "price": 6000
-}
-```
-```json
-Response:
-{
-    "listing": {
-        "id": 143,
-        "user_id": 1,
-        "listing_type": "rent",
-        "price": 6000,
-        "created_at": 1475820997000000,
-        "updated_at": 1475820997000000,
-    }
-}
-```
-
-## Setup
-The listing service has been built already. You need to build the remaining two components: the user service and the public API layer. 
-
-The first priority would be to get the listing service up and running! You will need Python 3 to run the example.
-
-### Install pip
-pip is a handy tool to install libraries/dependencies for your python programs. pip should already come installed on your system. Head over to https://pip.pypa.io/en/stable/installing/ for steps to install pip if it's not available.
-
-### Install virtualenv
-We use virtualenv to create an isolated running environment to install dependencies and launch the web application. Head over to https://virtualenv.pypa.io/en/latest/installation.html for instructions to install virtualenv.
-
-### Install dependencies
-Once you have pip and virtualenv set up, we can proceed to create the environment to run our web applications:
+Each service reads from `.env.dev` and runs on custom ports.
 
 ```bash
-# Locate the path for the Python 3 installation
-which python3
+# In each service folder (e.g. listing_service/)
+python public_api.py --port=6000 --debug=true
 
-# Create the virtual environment in a folder named "env" in the current directory
-virtualenv env --python=<path_to_python_3>
+# Or for user_service/
+python public_api.py --port=7000 --debug=true
 
-# Start the virtual environment
-source env/bin/activate
-
-# Install the required dependencies/libraries
-pip install -r python-libs.txt
-```
-You'll see `(env)` show up at the beginning of the command line if you've started virtual environment successfully. To check if the dependencies are installed correctly, run `pip freeze` and check if the output looks something like this:
-
-```
-tornado==6.1
+# Or for public_api/
+python public_api.py --port=8000 --debug=true
 ```
 
-### Run the listing service
-Now we're all set to run the listing service!
+Make sure to have `.env.dev` in each service directory like:
+
+```env
+ENV=dev
+LISTING_SERVICE_URL=http://localhost:6000/listings
+USER_SERVICE_URL=http://localhost:7000/users
+PORT=8000
+DEBUG=true
+```
+
+---
+
+## 🐳 2. Run with Docker (Dev Mode)
+
+This exposes all 3 services:
+
+- `listing_service`: [http://localhost:6000](http://localhost:6000)
+- `user_service`: [http://localhost:7000](http://localhost:7000)
+- `public_api`: [http://localhost:8000](http://localhost:8000)
+
+### Step-by-step:
 
 ```bash
-# Run the listing service
-python listing_service.py --port=6000 --debug=true
+docker-compose -f docker-compose.dev.yml up --build
 ```
-The following settings that can be configured via command-line arguments when starting the app:
 
-- `port`: The port number to run the application on (default: `6000`)
-- `debug`: Runs the application in debug mode. Applications running in debug mode will automatically reload in response to file changes. (default: `true`)
+It will use `.env.dev` inside each service folder.
 
-### Create listings
-Time to add some data into the listing service!
+---
+
+## 🔐 3. Run with Docker (Prod Mode)
+
+This **only exposes **`` on port `8000`. The other services are internal-only.
 
 ```bash
-curl localhost:8888/listings -XPOST \
-    -d user_id=1 \
-    -d listing_type=rent \
-    -d price=4500
+docker-compose -f docker-compose.prod.yml up --build
 ```
+
+It uses `.env.prod` for each service and enforces internal access.
+
+---
+
+## 📁 Folder Structure (Services)
+
+Each service folder contains:
+
+- `public_api.py` – the main Tornado app entry point
+- `python-libs.txt` – dependency list
+- `.env.dev` and `.env.prod` – environment config
+
+---
+
+## 🔄 Switching Environments
+
+- `.env.dev`: used by manual run and Docker Dev
+- `.env.prod`: used only by Docker Prod
+
+
 
