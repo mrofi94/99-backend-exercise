@@ -46,10 +46,10 @@ Each service reads from `.env.dev` and runs on custom ports.
 
 ```bash
 # In each service folder (e.g. listing_service/)
-python public_api.py --port=6000 --debug=true
+python listing_service.py --port=6000 --debug=true
 
 # Or for user_service/
-python public_api.py --port=7000 --debug=true
+python user_service.py --port=7000 --debug=true
 
 # Or for public_api/
 python public_api.py --port=8000 --debug=true
